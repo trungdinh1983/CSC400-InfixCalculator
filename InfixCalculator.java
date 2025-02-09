@@ -1,128 +1,113 @@
+
+import java.util.*;
+
 public class InfixCalculator {
-    private java.util.Map<Character, Integer> priorities;
+    // Math operations priority
 
-    public InfixCalculator() {
-        priorities = new java.util.HashMap<>();
-        priorities.put('+', 1);
-        priorities.put('-', 1);
-        priorities.put('*', 2);
-        priorities.put('/', 2);
-        priorities.put('%', 2);
-    }
+        put('+', 1); put('-', 1);  // lower priority
+        put('*', 2); put('/', 2); put('%', 2);  // higher priority
+    }};
 
-    private boolean isOperator(char c) {
-        return priorities.containsKey(c);
-    }
-
-    private int calculate(int a, int b, char operator) {
-        switch (operator) {
-            case '+':
-                return a + b;
-            case '-':
-                return a - b;
-            case '*':
-                return a * b;
-            case '/':
-                if (b == 0) {
-                    throw new ArithmeticException("Division by zero");
-                }
-                return a / b;
-            case '%':
-                if (b == 0) {
-                    throw new ArithmeticException("Modulo by zero");
-                }
-                return a % b;
-            default:
-                throw new IllegalArgumentException("Invalid operator");
+    // Calculate two numbers 
+    private int calculate(int a,  t b, char op) {
+        switch (op) { 
+            case '+': return a +  
+            case '-': return a -  
+            case '*': return a * b;
+            case '/': if (b == 0) throw new ArithmeticException("Can't divide by zero");
+                     return a / b;
+            case '%': if (b == 0) throw new ArithmeticException("Can't mod by zero");
+                     return a % b;
+            default:  throw new IllegalArgumentException("Invalid operator: " + op);
         }
     }
 
-    public int evaluateInfix(String infixExpression) {
-        if (infixExpression == null || infixExpression.isEmpty()) {
-            throw new IllegalArgumentException("Empty expression");
-        }
-
-        infixExpression = infixExpression.replaceAll("\\s+", "");
-        java.util.Stack<Integer> numbers = new java.util.Stack<>();
-        java.util.Stack<Character> operators = new java.util.Stack<>();
-
+    public int evaluateInfix(String exp) {
         try {
-            for (int i = 0; i < infixExpression.length(); i++) {
-                char current = infixExpression.charAt(i);
+            Stack<Int
+                k<Character> ops = new Stack<>();
 
-                if (current == '(') {
-                    operators.push(current);
-                } else if (Character.isDigit(current)) {
-                    int number = 0;
-                    while (i < infixExpression.length() && Character.isDigit(infixExpression.charAt(i))) {
-                        number = number * 10 + (infixExpression.charAt(i) - '0');
-                        i++;
+                rocess each character
+            for (int 
+                char c = exp.charAt(i);
+                
+                if (c == ' ') continue;  // skip spaces
+                
+                if (c == '(') {
+                    ops.push(c);
+                }
+                else if (Character.isDigit(c)) {
+                    int num = 0;
+                    while (i < exp.length() && Character.isDigit(exp.charAt(i))) {
+                        num = num * 10 + (exp.charAt(i) - '0');
+                    
                     }
                     i--;
-                    numbers.push(number);
-                } else if (current == ')') {
-                    while (!operators.isEmpty() && operators.peek() != '(') {
-                        int num2 = numbers.pop();
-                        int num1 = numbers.pop();
-                        numbers.push(calculate(num1, num2, operators.pop()));
+                    nums.push(num);
+                }
+                else if (c == ')') {
+                    while (!ops.isEmpty() && ops.peek() != '(') {
+                        nums.push(calculate(nums.pop(), nums.pop(), ops.pop()));
                     }
-                    if (!operators.isEmpty()) {
-                        operators.pop();
-                    } else {
-                        throw new IllegalArgumentException("Invalid expression");
+                    ops.pop();  // remove '('
+                }
+                else if (priority.containsKey(c)) {
+                    while (!ops.isEmpty() && ops.peek() != '(' && 
+                           priority.get(ops.peek()) >= priority.get(c)) {
+                        nums.push(calculate(nums.pop(), nums.pop(), ops.pop()));
                     }
-                } else if (isOperator(current)) {
-                    while (!operators.isEmpty() && operators.peek() != '(' &&
-                            priorities.get(operators.peek()) >= priorities.get(current)) {
-                        int num2 = numbers.pop();
-                        int num1 = numbers.pop();
-                        numbers.push(calculate(num1, num2, operators.pop()));
-                    }
-                    operators.push(current);
-                } else {
-                    throw new IllegalArgumentException("Invalid character: " + current);
+                    ops.push(c);
                 }
             }
 
-            while (!operators.isEmpty()) {
-                if (operators.peek() == '(') {
-                    throw new IllegalArgumentException("Invalid expression");
-                }
-                int num2 = numbers.pop();
-                int num1 = numbers.pop();
-                numbers.push(calculate(num1, num2, operators.pop()));
+            // Process remaining operations
+            while (!ops.isEmpty()) {
+                nums.push(calculate(nums.pop(), nums.pop(), ops.pop()));
             }
 
-            if (numbers.size() != 1) {
-                throw new IllegalArgumentException("Invalid expression");
-            }
-            return numbers.pop();
+            return nums.pop();
         } catch (Exception e) {
-            System.err.println("Error: Invalid infix expression");
+            System.out.println("Error: Invalid expression");
             throw e;
         }
     }
 
     public static void main(String[] args) {
-        InfixCalculator calculator = new InfixCalculator();
-        java.util.Scanner scanner = new java.util.Scanner(System.in);
-        
+        InfixCalculator calc = new InfixCalculator();
+        Scanner input = new Scanner(System.in);
+
+        System.out.println("Simple Calculator (type 'exit' to quit)");
+        System.out.println("Example: 2+3, (4+2)*3, 15/5");
+
         while (true) {
-            System.out.print("\nEnter an expression (or 'exit' to quit): ");
-            String input = scanner.nextLine();
+            System.out.print("> ");
+            String exp = input.nextLine();
             
-            if (input.equalsIgnoreCase("exit")) {
-                break;
-            }
+            if (exp.equalsIgnoreCase("exit")) break;
             
             try {
-                int result = calculator.evaluateInfix(input);
-                System.out.println("Result: " + result);
+                System.out.println("= " + calc.evaluateInfix(exp));
             } catch (Exception e) {
-                System.err.println("Error: Invalid infix expression");
+                System.out.println("Error: Invalid expression");
             }
         }
-        
-        scanner.close();
     }
 }
+
+    
+
+    
+    
+        
+        
+    
+
+        
+
+        
+
+            
+
+            
+
+        
