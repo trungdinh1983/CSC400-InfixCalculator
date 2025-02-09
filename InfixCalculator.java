@@ -1,113 +1,138 @@
-
 import java.util.*;
 
 public class InfixCalculator {
-    // Math operations priority
+    // Store which operations should be done first (higher number = do first)
+    private Map<Character, Integer> operationOrder;
+    
+    // Setup the calculator rules
+    public InfixCalculator() {
+        operationOrder = new HashMap<>();
+        // Do these last
+        operationOrder.put('+', 1);  // addition
+        operationOrder.put('-', 1);  // subtraction
+        // Do these first
+        operationOrder.put('*', 2);  // multiplication
+        operationOrder.put('/', 2);  // division
+        operationOrder.put('%', 2);  // remainder
+    }
 
-        put('+', 1); put('-', 1);  // lower priority
-        put('*', 2); put('/', 2); put('%', 2);  // higher priority
-    }};
-
-    // Calculate two numbers 
-    private int calculate(int a,  t b, char op) {
-        switch (op) { 
-            case '+': return a +  
-            case '-': return a -  
-            case '*': return a * b;
-            case '/': if (b == 0) throw new ArithmeticException("Can't divide by zero");
-                     return a / b;
-            case '%': if (b == 0) throw new ArithmeticException("Can't mod by zero");
-                     return a % b;
-            default:  throw new IllegalArgumentException("Invalid operator: " + op);
+    // Do the actual math operation
+    private int doMathOperation(int firstNumber, int secondNumber, char mathSymbol) {
+        switch (mathSymbol) {
+            case '+': return firstNumber + secondNumber;
+            case '-': return firstNumber - secondNumber;
+            case '*': return firstNumber * secondNumber;
+            case '/': 
+                if (secondNumber == 0) throw new ArithmeticException("Cannot divide by zero!");
+                return firstNumber / secondNumber;
+            case '%': 
+                if (secondNumber == 0) throw new ArithmeticException("Cannot find remainder when dividing by zero!");
+                return firstNumber % secondNumber;
+            default: 
+                throw new IllegalArgumentException("Not a valid math symbol: " + mathSymbol);
         }
     }
 
-    public int evaluateInfix(String exp) {
+    // Main method to solve the math expression
+    public int evaluateInfix(String mathExpression) {
+        // Check if expression is empty
+        if (mathExpression == null || mathExpression.trim().isEmpty()) {
+            throw new IllegalArgumentException("No math expression provided");
+        }
+
+        // Stacks to store numbers and math symbols
+        Stack<Integer> numberStack = new Stack<>();
+        Stack<Character> symbolStack = new Stack<>();
+
         try {
-            Stack<Int
-                k<Character> ops = new Stack<>();
-
-                rocess each character
-            for (int 
-                char c = exp.charAt(i);
+            // Process each character in the expression
+            for (int position = 0; position < mathExpression.length(); position++) {
+                char currentSymbol = mathExpression.charAt(position);
                 
-                if (c == ' ') continue;  // skip spaces
+                // Skip spaces
+                if (currentSymbol == ' ') continue;
                 
-                if (c == '(') {
-                    ops.push(c);
+                // If we find opening parenthesis
+                if (currentSymbol == '(') {
+                    symbolStack.push(currentSymbol);
                 }
-                else if (Character.isDigit(c)) {
-                    int num = 0;
-                    while (i < exp.length() && Character.isDigit(exp.charAt(i))) {
-                        num = num * 10 + (exp.charAt(i) - '0');
-                    
+                // If we find a number
+                else if (Character.isDigit(currentSymbol)) {
+                    int fullNumber = 0;
+                    // Read the complete number (could be multiple digits)
+                    while (position < mathExpression.length() && 
+                           Character.isDigit(mathExpression.charAt(position))) {
+                        fullNumber = fullNumber * 10 + (mathExpression.charAt(position) - '0');
+                        position++;
                     }
-                    i--;
-                    nums.push(num);
+                    position--;
+                    numberStack.push(fullNumber);
                 }
-                else if (c == ')') {
-                    while (!ops.isEmpty() && ops.peek() != '(') {
-                        nums.push(calculate(nums.pop(), nums.pop(), ops.pop()));
+                // If we find closing parenthesis
+                else if (currentSymbol == ')') {
+                    // Calculate everything inside parentheses
+                    while (!symbolStack.isEmpty() && symbolStack.peek() != '(') {
+                        int secondNum = numberStack.pop();
+                        int firstNum = numberStack.pop();
+                        numberStack.push(doMathOperation(firstNum, secondNum, symbolStack.pop()));
                     }
-                    ops.pop();  // remove '('
+                    if (!symbolStack.isEmpty()) {
+                        symbolStack.pop();  // remove '('
+                    }
                 }
-                else if (priority.containsKey(c)) {
-                    while (!ops.isEmpty() && ops.peek() != '(' && 
-                           priority.get(ops.peek()) >= priority.get(c)) {
-                        nums.push(calculate(nums.pop(), nums.pop(), ops.pop()));
+                // If we find a math symbol
+                else if (operationOrder.containsKey(currentSymbol)) {
+                    while (!symbolStack.isEmpty() && symbolStack.peek() != '(' && 
+                           operationOrder.get(symbolStack.peek()) >= operationOrder.get(currentSymbol)) {
+                        int secondNum = numberStack.pop();
+                        int firstNum = numberStack.pop();
+                        numberStack.push(doMathOperation(firstNum, secondNum, symbolStack.pop()));
                     }
-                    ops.push(c);
+                    symbolStack.push(currentSymbol);
+                }
+                else {
+                    throw new IllegalArgumentException("Invalid character found: " + currentSymbol);
                 }
             }
 
-            // Process remaining operations
-            while (!ops.isEmpty()) {
-                nums.push(calculate(nums.pop(), nums.pop(), ops.pop()));
+            // Do any remaining operations
+            while (!symbolStack.isEmpty()) {
+                int secondNum = numberStack.pop();
+                int firstNum = numberStack.pop();
+                numberStack.push(doMathOperation(firstNum, secondNum, symbolStack.pop()));
             }
 
-            return nums.pop();
-        } catch (Exception e) {
-            System.out.println("Error: Invalid expression");
-            throw e;
+            return numberStack.pop();
+        } catch (Exception error) {
+            System.out.println("Error: " + error.getMessage());
+            throw error;
         }
     }
 
+    // Program start point
     public static void main(String[] args) {
-        InfixCalculator calc = new InfixCalculator();
-        Scanner input = new Scanner(System.in);
+        InfixCalculator calculator = new InfixCalculator();
+        Scanner userInput = new Scanner(System.in);
 
-        System.out.println("Simple Calculator (type 'exit' to quit)");
-        System.out.println("Example: 2+3, (4+2)*3, 15/5");
+        System.out.println("Simple Math Calculator (type 'exit' to quit)");
+        System.out.println("You can type expressions like: 2+3, (4+2)*3, 15/5");
 
         while (true) {
-            System.out.print("> ");
-            String exp = input.nextLine();
+            System.out.print("Enter your math problem > ");
+            String expression = userInput.nextLine();
             
-            if (exp.equalsIgnoreCase("exit")) break;
+            if (expression.equalsIgnoreCase("exit")) {
+                System.out.println("Thanks for using the calculator!");
+                break;
+            }
             
             try {
-                System.out.println("= " + calc.evaluateInfix(exp));
-            } catch (Exception e) {
-                System.out.println("Error: Invalid expression");
+                System.out.println("Answer = " + calculator.evaluateInfix(expression));
+            } catch (Exception error) {
+                System.out.println("That's not a valid math expression. Please try again.");
             }
         }
+        
+        userInput.close();
     }
 }
-
-    
-
-    
-    
-        
-        
-    
-
-        
-
-        
-
-            
-
-            
-
-        
